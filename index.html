@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Message From Heart</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary: #ffcbd1;
+    --accent: #ff8fa3;
+    --bg: #020205;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  body {
+    background-color: var(--bg);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: #fff;
+  }
+
+  /* Efek Vignette untuk fokus */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  #canvas {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 1;
+  }
+
+  .card-container {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 400px;
+    perspective: 1000px;
+  }
+
+  /* Aura cahaya di belakang kartu */
+  .card-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(255, 143, 163, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulseGlow 4s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+  }
+
+  .main-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    padding: 45px 30px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    transform-style: preserve-3d;
+  }
+
+  .stiker-box {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 30px;
+    position: relative;
+  }
+
+  .stiker-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+  }
+
+  .content-text h2 {
+    font-family: 'Caveat', cursive;
+    font-size: 38px;
+    color: var(--primary);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+  }
+
+  .content-text p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.75);
+    min-height: 70px;
+  }
+
+  .action-area {
+    margin-top: 35px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, var(--accent), #ffb7c5);
+    color: #1a0a0d;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(255, 143, 163, 0.4);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    transform: none;
+    cursor: default;
+  }
+
+  .footer-name {
+    position: fixed;
+    bottom: 25px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.2);
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<audio id="musik" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_8c3a4d6b2c.mp3" type="audio/mpeg">
+</audio>
+
+<div class="card-container">
+  <div class="card-glow"></div>
+  <div class="main-card" id="card">
+    <div class="stiker-box">
+      <img id="stiker" src="https://raw.githubusercontent.com/feeldreams/sticker/main/mnd2.png">
+    </div>
+
+    <div class="content-text">
+      <h2 id="title">Hey...</h2>
+      <p id="msg">Klik tombol di bawah, ada sesuatu yang ingin aku sampaikan.</p>
+    </div>
+
+    <div class="action-area">
+      <button class="btn" id="nextBtn" onclick="initMessage()">Buka Pesan</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer-name">Hoidir Digital Story</div>
+
+<script>
+  const story = [
+    { t: "Terima Kasih", m: "Makasih ya udah mau luangkan waktu sebentar buat mampir ke sini.", s: "https://raw.githubusercontent.com/feeldreams/sticker/main/bunga.png" },
+    { t: "Lagi Berjuang", m: "Aku lagi berusaha bangun semuanya dari awal lagi, meski kadang terasa sepi dan melelahkan.", s: "https://raw.githubusercontent.com/feeldreams/sticker/main/sad.png" },
+    { t: "Berarti Banget", m: "Support kecil darimu itu bener-bener jadi alasan aku buat terus maju.", s: "https://raw.githubusercontent.com/feeldreams/sticker/main/gembul.png" },
+    { t: "Boleh Minta Tolong?", m: "Kalau kamu nggak keberatan, bantu support aku dengan follow TikTok ya? Itu semangat buatku!", s: "https://raw.githubusercontent.com/feeldreams/sticker/main/love.png" }
+  ];
+
+  let currentIdx = 0;
+  const audio = document.getElementById('musik');
+
+  function initMessage() {
+    audio.play().catch(()=>{});
+    if(currentIdx < story.length) {
+      updateCard();
+    } else {
+      showFinal();
+    }
+  }
+
+  function updateCard() {
+    const btn = document.getElementById('nextBtn');
+    const card = document.getElementById('card');
+    
+    card.style.opacity = "0";
+    card.style.transform = "translateY(10px) rotateX(10deg)";
+    btn.disabled = true;
+
+    setTimeout(() => {
+      document.getElementById('stiker').src = story[currentIdx].s;
+      document.getElementById('title').innerText = story[currentIdx].t;
+      typeWriter(story[currentIdx].m);
+      
+      card.style.opacity = "1";
+      card.style.transform = "translateY(0) rotateX(0)";
+      btn.innerText = "Lanjut";
+      currentIdx++;
+    }, 400);
+  }
+
+  function typeWriter(text) {
+    const p = document.getElementById('msg');
+    p.innerHTML = "";
+    let i = 0;
+    const interval = setInterval(() => {
+      if(i < text.length) {
+        p.innerHTML += text.charAt(i);
+        i++;
+      } else {
+        clearInterval(interval);
+        document.getElementById('nextBtn').disabled = false;
+      }
+    }, 40);
+  }
+
+  function showFinal() {
+    const area = document.querySelector('.action-area');
+    document.getElementById('msg').innerText = "Terima kasih banyak! Sehat dan bahagia selalu ya buat kamu ✨";
+    area.innerHTML = `<a href="https://www.tiktok.com/@hoidir24" target="_blank" class="btn">Follow TikTok Aku</a>`;
+  }
+
+  // --- SINEMATIK BACKGROUND (BINTANG & BINTANG JATUH) ---
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  let shootingStars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  class Star {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 1.5;
+      this.speed = Math.random() * 0.05;
+    }
+    draw() {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    update() {
+      this.y -= this.speed;
+      if (this.y < 0) this.y = canvas.height;
+    }
+  }
+
+  class ShootingStar {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = 0;
+      this.len = Math.random() * 100 + 50;
+      this.speed = Math.random() * 15 + 10;
+      this.opacity = 1;
+    }
+    draw() {
+      ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.x - this.len, this.y + this.len);
+      ctx.stroke();
+    }
+    update() {
+      this.x += this.speed;
+      this.y += this.speed;
+      this.opacity -= 0.01;
+      if (this.opacity <= 0) this.reset();
+    }
+  }
+
+  for(let i=0; i<150; i++) stars.push(new Star());
+  for(let i=0; i<2; i++) shootingStars.push(new ShootingStar());
+
+  function animate() {
+    ctx.fillStyle = "#020205";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => { s.update(); s.draw(); });
+    shootingStars.forEach(s => { s.update(); s.draw(); });
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  animate();
+</script>
+</body>
+</html>
